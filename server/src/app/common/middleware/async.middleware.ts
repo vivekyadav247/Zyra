@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-export const catchAsync = (
+export const asyncHandler = (
   handler: RequestHandler
 ): RequestHandler => {
   return (req, res, next) => {

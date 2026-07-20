@@ -3,7 +3,8 @@ import type {Express} from "express" ;
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./common/middleware/error.middleware.js";
-import { notFoundHandler } from "./common/middleware/notFound.middleare.js";
+import { notFoundHandler } from "./common/middleware/notFound.middleware.js";
+import healthRouter from "./module/health/health.router.js";
 
 export function createApplication(): Express {
   const app = express() ;
@@ -15,6 +16,8 @@ export function createApplication(): Express {
   app.get("/", (req, res) => {
     res.send("hello Zyra") ;
   })
+
+  app.use("/health", healthRouter) ; // Mount health routes
 
   app.use(notFoundHandler) ; // Global 404 handler for unmatched routes
 
