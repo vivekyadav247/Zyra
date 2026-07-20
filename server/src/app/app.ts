@@ -2,6 +2,7 @@ import express from "express";
 import type {Express} from "express" ;
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { errorHandler } from "./common/middleware/error.middleware.js";
 
 export function createApplication(): Express {
   const app = express() ;
@@ -13,6 +14,8 @@ export function createApplication(): Express {
   app.get("/", (req, res) => {
     res.send("hello Zyra") ;
   })
+
+  app.use(errorHandler) ;
 
   return app ;
 
