@@ -3,6 +3,7 @@ import type {Express} from "express" ;
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./common/middleware/error.middleware.js";
+import { notFoundHandler } from "./common/middleware/notFound.middleare.js";
 
 export function createApplication(): Express {
   const app = express() ;
@@ -15,7 +16,9 @@ export function createApplication(): Express {
     res.send("hello Zyra") ;
   })
 
-  app.use(errorHandler) ;
+  app.use(notFoundHandler) ; // Global 404 handler for unmatched routes
+
+  app.use(errorHandler) ; // Global error handler for all errors
 
   return app ;
 
