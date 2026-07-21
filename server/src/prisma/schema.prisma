@@ -133,6 +133,7 @@ model User {
   refreshTokens  RefreshToken[]
   oauthAccounts  OAuthAccount[]
   resumes        Resume[]
+  jobDescriptions JobDescription[]
 
   @@map("users")
 }
