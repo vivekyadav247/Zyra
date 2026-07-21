@@ -622,19 +622,23 @@ model Resume {
 
 
 model ResumeSection {
-  id          String            @id @default(uuid())
+  id             String            @id @default(uuid())
 
-  resumeId    String
-  resume      Resume            @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  resumeId       String
+  resume         Resume            @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  type        ResumeSectionType
+  type           ResumeSectionType
 
-  isVisible   Boolean           @default(true)
+  content        Json
 
-  displayOrder Int              @default(0)
+  generatedByAI  Boolean           @default(true)
 
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  isVisible      Boolean           @default(true)
+
+  displayOrder   Int               @default(0)
+
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
   @@unique([resumeId, type])
   @@index([resumeId])
