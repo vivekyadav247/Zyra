@@ -587,38 +587,36 @@ model GitHubRepository {
 
 
 model Resume {
-  id              String         @id @default(uuid())
+  id                String         @id @default(uuid())
 
-  userId          String
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  title           String
+  jobDescriptionId  String?
+  jobDescription    JobDescription? @relation(fields: [jobDescriptionId], references: [id])
 
-  status          ResumeStatus   @default(DRAFT)
+  title             String
 
-  thumbnailUrl    String?
+  status            ResumeStatus   @default(DRAFT)
 
-  isPrimary       Boolean        @default(false)
+  thumbnailUrl      String?
 
-  lastExportedAt  DateTime?
+  isPrimary         Boolean        @default(false)
 
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  lastExportedAt    DateTime?
 
-  sections        ResumeSection[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
-  shares          ResumeShare[]
-
-  atsAnalysis     ATSAnalysis?
-
-  aiSuggestions   AISuggestion[]
-
-  rankings        ResumeRanking[]
-
-  jobDescriptionId String?
-  jobDescription   JobDescription?
+  // Relations
+  sections          ResumeSection[]
+  shares            ResumeShare[]
+  atsAnalysis       ATSAnalysis?
+  aiSuggestions     AISuggestion[]
+  rankings          ResumeRanking[]
 
   @@index([userId])
+  @@index([jobDescriptionId])
   @@map("resumes")
 }
 
