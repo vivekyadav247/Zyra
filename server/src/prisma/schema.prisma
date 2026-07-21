@@ -6,3 +6,759 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum OAuthProvider {
+  GOOGLE
+  GITHUB
+}
+
+enum ResumeStatus {
+  DRAFT
+  ACTIVE
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ResumeSectionType {
+  PROFILE
+  SUMMARY
+  EDUCATION
+  EXPERIENCE
+  PROJECTS
+  SKILL
+  CERTIFICATE
+  ACHIEVEMENT
+  LEADERSHIP
+}
+
+enum CodingPlatform {
+  LEETCODE
+  CODEFORCES
+  CODECHEF
+  ATCODER
+  HACKERRANK
+  HACKEREARTH
+  GEEKSFORGEEKS
+}
+
+enum GithubRepoVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum AnalysisStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ResumeShareVisibility {
+  PUBLIC
+  PRIVATE
+  PASSWORD_PROTECTED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  INTERN
+  FREELANCE
+  CONTRACT
+}
+
+enum DegreeType {
+  HIGH_SCHOOL
+  INTERMEDIATE
+  DIPLOMA
+  ASSOCIATE
+  BACHELOR
+  MASTER
+  PHD
+  OTHER
+}
+
+enum SkillCategory {
+  LANGUAGE
+  FRAMEWORK
+  LIBRARY
+  DATABASE
+  TOOL
+  DEVOPS
+  CLOUD
+  OTHER
+}
+
+enum ProficiencyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum RepositorySyncStatus {
+  PENDING
+  SYNCING
+  COMPLETED
+  FAILED
+}
+
+enum RankingType {
+  ATS
+  AI
+  HYBRID
+}
+
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+
+  role          UserRole @default(USER)
+
+  emailVerified Boolean  @default(true)
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  profile        Profile?
+  refreshTokens  RefreshToken[]
+  oauthAccounts  OAuthAccount[]
+  resumes        Resume[]
+
+  @@map("users")
+}
+
+
+
+model RefreshToken {
+  id          String   @id @default(uuid())
+  tokenHash   String   @unique
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt   DateTime
+  revokedAt   DateTime?
+
+  deviceName  String?
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+
+
+model OAuthAccount {
+  id                String          @id @default(uuid())
+
+  provider          OAuthProvider
+  providerAccountId String
+
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  accessToken       String?
+  refreshToken      String?
+  expiresAt         DateTime?
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
+
+model Profile {
+  id              String   @id @default(uuid())
+
+  // Relation
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Personal Information
+  firstName       String
+  lastName        String
+
+  // Professional Information
+  headline        String?
+  summary         String?
+
+  // Contact Information
+  phone           String?
+
+  // Location
+  city            String?
+  state           String?
+  country         String?
+
+  // Profile Image
+  avatarUrl       String?
+
+  // Social Links
+  githubUrl       String?
+  linkedinUrl     String?
+  portfolioUrl    String?
+  xUrl            String?
+
+  // Relations
+  educations      Education[]
+  experiences     Experience[]
+  projects        Project[]
+  skills          Skill[]
+  certificates    Certificate[]
+  achievements    Achievement[]
+  leaderships     Leadership[]
+
+  codingProfiles  CodingProfile[]
+  githubProfile   GitHubProfile?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+
+model Education {
+  id                    String     @id @default(uuid())
+
+  profileId             String
+  profile               Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  institutionName       String
+
+  degree                DegreeType
+  degreeName            String
+  fieldOfStudy          String
+
+  grade                 String?
+
+  startDate             DateTime
+  endDate               DateTime?
+
+  isCurrentlyStudying   Boolean    @default(false)
+
+  details               String?
+
+  displayOrder          Int        @default(0)
+
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  @@index([profileId])
+  @@map("educations")
+}
+
+
+model Experience {
+  id                String   @id @default(uuid())
+
+  profileId         String
+  profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  companyName       String
+  jobTitle          String
+
+  employmentType    EmploymentType
+
+  location          String?
+
+  startDate         DateTime
+  endDate           DateTime?
+
+  isCurrent         Boolean  @default(false)
+
+  companyWebsite    String?
+  companyLogoUrl    String?
+
+  displayOrder      Int      @default(0)
+
+  bullets           ExperienceBullet[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([profileId])
+  @@map("experiences")
+}
+
+
+model ExperienceBullet {
+  id             String      @id @default(uuid())
+
+  experienceId   String
+  experience     Experience  @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  content        String
+
+  displayOrder   Int         @default(0)
+
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([experienceId])
+  @@map("experience_bullets")
+}
+
+
+model Project {
+  id            String              @id @default(uuid())
+
+  profileId     String
+  profile       Profile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  title         String
+  description   String?
+
+  githubUrl     String?
+  liveUrl       String?
+
+  startDate     DateTime?
+  endDate       DateTime?
+
+  isOngoing     Boolean             @default(false)
+
+  displayOrder  Int                 @default(0)
+
+  technologies  ProjectTechnology[]
+  highlights    ProjectHighlight[]
+
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([profileId])
+  @@map("projects")
+}
+
+model ProjectTechnology {
+  id            String   @id @default(uuid())
+
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name          String
+
+  displayOrder  Int      @default(0)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([projectId])
+  @@unique([projectId, name])
+  @@map("project_technologies")
+}
+
+
+model ProjectHighlight {
+  id             String   @id @default(uuid())
+
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  content        String
+
+  displayOrder   Int      @default(0)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([projectId])
+  @@map("project_highlights")
+}
+
+
+model Skill {
+  id                String             @id @default(uuid())
+
+  profileId         String
+  profile           Profile            @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name              String
+  category          SkillCategory
+  proficiencyLevel  ProficiencyLevel?
+
+  displayOrder      Int                @default(0)
+
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([profileId])
+  @@unique([profileId, name])
+  @@map("skills")
+}
+
+
+model Certificate {
+  id                String    @id @default(uuid())
+
+  profileId         String
+  profile           Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  title             String
+  issuer            String
+
+  credentialId      String?
+  credentialUrl     String?
+
+  issueDate         DateTime
+  expiryDate        DateTime?
+
+  doesNotExpire     Boolean   @default(false)
+
+  displayOrder      Int       @default(0)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([profileId])
+  @@map("certificates")
+}
+
+
+model Achievement {
+  id              String    @id @default(uuid())
+
+  profileId       String
+  profile         Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  title           String
+  description     String?
+
+  issuer          String?
+
+  achievementDate DateTime?
+
+  achievementUrl  String?
+
+  displayOrder    Int       @default(0)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([profileId])
+  @@map("achievements")
+}
+
+
+model Leadership {
+  id              String    @id @default(uuid())
+
+  profileId       String
+  profile         Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  title           String
+  organization    String
+
+  description     String?
+
+  startDate       DateTime?
+  endDate         DateTime?
+
+  isCurrent       Boolean   @default(false)
+
+  displayOrder    Int       @default(0)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([profileId])
+  @@map("leaderships")
+}
+
+
+model CodingProfile {
+  id                 String               @id @default(uuid())
+
+  profileId          String
+  profile            Profile              @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  platform           CodingPlatform
+
+  username           String
+
+  profileUrl         String?
+
+  lastSyncedAt       DateTime?
+
+  syncStatus         RepositorySyncStatus @default(PENDING)
+
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@unique([profileId, platform])
+  @@index([profileId])
+  @@map("coding_profiles")
+}
+
+
+model GitHubProfile {
+  id                String      @id @default(uuid())
+
+  profileId         String      @unique
+  profile           Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  githubId          String      @unique
+
+  username          String
+  displayName       String?
+
+  profileUrl        String
+
+  avatarUrl         String?
+
+  bio               String?
+
+  followers         Int         @default(0)
+  following         Int         @default(0)
+
+  publicRepos       Int         @default(0)
+
+  joinedAt          DateTime?
+
+  lastSyncedAt      DateTime?
+
+  syncStatus        RepositorySyncStatus @default(PENDING)
+
+  repositories      GitHubRepository[]
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([username])
+  @@map("github_profiles")
+}
+
+
+model GitHubRepository {
+  id                String                  @id @default(uuid())
+
+  githubProfileId   String
+  githubProfile     GitHubProfile           @relation(fields: [githubProfileId], references: [id], onDelete: Cascade)
+
+  githubRepoId      String                  @unique
+
+  name              String
+  fullName          String
+
+  description       String?
+
+  visibility        GithubRepoVisibility
+
+  htmlUrl           String
+
+  homepageUrl       String?
+
+  primaryLanguage   String?
+
+  stars             Int                     @default(0)
+  forks             Int                     @default(0)
+  watchers          Int                     @default(0)
+
+  isFork            Boolean                 @default(false)
+  isArchived        Boolean                 @default(false)
+
+  lastPushedAt      DateTime?
+  lastSyncedAt      DateTime?
+
+  syncStatus        RepositorySyncStatus    @default(PENDING)
+
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@index([githubProfileId])
+  @@index([name])
+  @@map("github_repositories")
+}
+
+
+model Resume {
+  id              String         @id @default(uuid())
+
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title           String
+
+  status          ResumeStatus   @default(DRAFT)
+
+  thumbnailUrl    String?
+
+  isPrimary       Boolean        @default(false)
+
+  lastExportedAt  DateTime?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  sections        ResumeSection[]
+
+  shares          ResumeShare[]
+
+  atsAnalysis     ATSAnalysis?
+
+  aiSuggestions   AISuggestion[]
+
+  rankings        ResumeRanking[]
+
+  jobDescriptionId String?
+  jobDescription   JobDescription?
+
+  @@index([userId])
+  @@map("resumes")
+}
+
+
+model ResumeSection {
+  id          String            @id @default(uuid())
+
+  resumeId    String
+  resume      Resume            @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  type        ResumeSectionType
+
+  isVisible   Boolean           @default(true)
+
+  displayOrder Int              @default(0)
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([resumeId, type])
+  @@index([resumeId])
+  @@map("resume_sections")
+}
+
+model ResumeShare {
+  id            String                @id @default(uuid())
+
+  resumeId      String
+  resume        Resume                @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  shareToken    String                @unique
+
+  visibility    ResumeShareVisibility @default(PRIVATE)
+
+  passwordHash  String?
+
+  expiresAt     DateTime?
+
+  lastViewedAt  DateTime?
+
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  @@index([resumeId])
+  @@map("resume_shares")
+}
+
+
+model ATSAnalysis {
+  id                String          @id @default(uuid())
+
+  resumeId          String          @unique
+  resume            Resume          @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  status            AnalysisStatus  @default(PENDING)
+
+  overallScore      Float?
+
+  strengths         Json?
+
+  weaknesses        Json?
+
+  missingKeywords   Json?
+
+  suggestions       Json?
+
+  analyzedAt        DateTime?
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("ats_analyses")
+}
+
+
+model AISuggestion {
+  id              String          @id @default(uuid())
+
+  resumeId        String
+  resume          Resume          @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  status          AnalysisStatus  @default(PENDING)
+
+  suggestions     Json?
+
+  generatedAt     DateTime?
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([resumeId])
+  @@map("ai_suggestions")
+}
+
+
+model ResumeRanking {
+  id            String       @id @default(uuid())
+
+  resumeId      String
+  resume        Resume       @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  rankingType   RankingType
+
+  rankingData   Json
+
+  generatedAt   DateTime?
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([resumeId])
+  @@unique([resumeId, rankingType])
+  @@map("resume_rankings")
+}
+
+
+model JobDescription {
+  id              String   @id @default(uuid())
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title           String?
+
+  companyName     String?
+
+  jobRole         String?
+
+  source          String?
+
+  description     String
+
+  extractedSkills Json?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  resumes         Resume[]
+
+  @@index([userId])
+  @@map("job_descriptions")
+}
+
