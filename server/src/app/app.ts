@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { errorHandler } from "./common/middleware/error.middleware.js";
 import { notFoundHandler } from "./common/middleware/notFound.middleware.js";
 import healthRouter from "./module/health/health.router.js";
+import authRouter from "./module/auth/auth.router.js" ;
 
 export function createApplication(): Express {
   const app = express() ;
@@ -18,6 +19,8 @@ export function createApplication(): Express {
   })
 
   app.use("/health", healthRouter) ; // Mount health routes
+
+  app.use("/auth", authRouter) ; // Mount authentication routes
 
   app.use(notFoundHandler) ; // Global 404 handler for unmatched routes
 
