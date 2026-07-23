@@ -1,7 +1,7 @@
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
+
 import { env } from "../config/env.js";
 import { ApiError } from "../utils/ApiError.js";
-import type {SignOptions} from "jsonwebtoken";
 
 export interface JwtPayload {
   userId: string;
@@ -23,23 +23,17 @@ export class JwtProvider {
 
   static verifyAccessToken(token: string): JwtPayload {
     try {
-      return jwt.verify(
-        token,
-        env.JWT_ACCESS_SECRET
-      ) as JwtPayload;
+      return jwt.verify(token, env.JWT_ACCESS_SECRET) as JwtPayload;
     } catch {
-      throw ApiError.unauthorized("Invalid access token");
+      throw ApiError.unauthorized("Invalid access token.");
     }
   }
 
   static verifyRefreshToken(token: string): JwtPayload {
     try {
-      return jwt.verify(
-        token,
-        env.JWT_REFRESH_SECRET
-      ) as JwtPayload;
+      return jwt.verify(token, env.JWT_REFRESH_SECRET) as JwtPayload;
     } catch {
-      throw ApiError.unauthorized("Invalid refresh token");
+      throw ApiError.unauthorized("Invalid refresh token.");
     }
   }
 }

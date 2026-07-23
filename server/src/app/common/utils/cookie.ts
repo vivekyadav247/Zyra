@@ -26,29 +26,25 @@ export const refreshTokenCookieOptions: CookieOptions = {
 export const setAuthCookies = (
   res: Response,
   accessToken: string,
-  refreshToken: string
+  refreshToken: string,
 ): void => {
-  res.cookie(
-    ACCESS_TOKEN_COOKIE,
-    accessToken,
-    accessTokenCookieOptions
-  );
+  res.cookie(ACCESS_TOKEN_COOKIE, accessToken, accessTokenCookieOptions);
 
-  res.cookie(
-    REFRESH_TOKEN_COOKIE,
-    refreshToken,
-    refreshTokenCookieOptions
-  );
+  res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, refreshTokenCookieOptions);
 };
 
 export const clearAuthCookies = (res: Response): void => {
-  res.clearCookie(
-    ACCESS_TOKEN_COOKIE,
-    accessTokenCookieOptions
-  );
+  res.clearCookie(ACCESS_TOKEN_COOKIE, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "strict",
+    path: "/",
+  });
 
-  res.clearCookie(
-    REFRESH_TOKEN_COOKIE,
-    refreshTokenCookieOptions
-  );
+  res.clearCookie(REFRESH_TOKEN_COOKIE, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "strict",
+    path: "/",
+  });
 };

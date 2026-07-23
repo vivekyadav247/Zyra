@@ -1,6 +1,10 @@
-import {
+import type {
+  OAuthAccount,
   OAuthProvider,
   Prisma,
+  Profile,
+  RefreshToken,
+  User,
 } from "@prisma/client";
 
 import { PrismaProvider } from "../../common/providers/prisma.provider.js";
@@ -8,15 +12,7 @@ import { PrismaProvider } from "../../common/providers/prisma.provider.js";
 export class AuthRepository {
   private readonly prisma = PrismaProvider.getClient();
 
-  async findUserByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-  }
-
-  async findUserById(userId: string) {
+  async findUserById(userId: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -24,10 +20,18 @@ export class AuthRepository {
     });
   }
 
+  async findUserByEmail(email: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+  }
+
   async findOAuthAccount(
     provider: OAuthProvider,
-    providerAccountId: string
-  ) {
+    providerAccountId: string,
+  ): Promise<OAuthAccount | null> {
     return this.prisma.oAuthAccount.findUnique({
       where: {
         provider_providerAccountId: {
@@ -38,29 +42,31 @@ export class AuthRepository {
     });
   }
 
-  async createUser(data: Prisma.UserCreateInput) {
+  async createUser(data: Prisma.UserCreateInput): Promise<User> {
     return this.prisma.user.create({
       data,
     });
   }
 
   async createOAuthAccount(
-    data: Prisma.OAuthAccountCreateInput
-  ) {
+    data: Prisma.OAuthAccountCreateInput,
+  ): Promise<OAuthAccount> {
     return this.prisma.oAuthAccount.create({
       data,
     });
   }
 
   async createRefreshToken(
-    data: Prisma.RefreshTokenCreateInput
-  ) {
+    data: Prisma.RefreshTokenCreateInput,
+  ): Promise<RefreshToken> {
     return this.prisma.refreshToken.create({
       data,
     });
   }
 
-  async findRefreshTokenByHash(tokenHash: string) {
+  async findRefreshTokenByHash(
+    tokenHash: string,
+  ): Promise<RefreshToken | null> {
     return this.prisma.refreshToken.findUnique({
       where: {
         tokenHash,
@@ -68,7 +74,7 @@ export class AuthRepository {
     });
   }
 
-  async deleteRefreshTokenByHash(tokenHash: string) {
+  async deleteRefreshTokenByHash(tokenHash: string): Promise<RefreshToken> {
     return this.prisma.refreshToken.delete({
       where: {
         tokenHash,
@@ -76,13 +82,37 @@ export class AuthRepository {
     });
   }
 
-  async updateLastLogin(userId: string) {
+  async deleteAllRefreshTokensByUserId(
+    userId: string,
+  ): Promise<Prisma.BatchPayload> {
+    return this.prisma.refreshToken.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  }
+
+  async updateLastLogin(userId: string): Promise<User> {
     return this.prisma.user.update({
       where: {
         id: userId,
       },
       data: {
         lastLoginAt: new Date(),
+      },
+    });
+  }
+
+  async createProfile(data: Prisma.ProfileCreateInput): Promise<Profile> {
+    return this.prisma.profile.create({
+      data,
+    });
+  }
+
+  async findProfileByUserId(userId: string): Promise<Profile | null> {
+    return this.prisma.profile.findUnique({
+      where: {
+        userId,
       },
     });
   }
